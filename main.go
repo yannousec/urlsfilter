@@ -29,13 +29,13 @@ func main() {
 	inputFile, outputFile, isUnique, domainsIncludeFilter := parseFlags()
 
 	if *inputFile == "" {
-		fmt.Println("Input file is required") //TODO mettre en rouge
+		fmt.Printf("[%v] Input file is required\n", color.RedString("err"))
 		return
 	}
 
 	file, err := os.Open(*inputFile)
 	if err != nil {
-		fmt.Printf("Error opening input file: %v\n", err)
+		fmt.Printf("[%v] Error opening input file\n", color.RedString("err"))
 		return
 	}
 	defer file.Close()
@@ -64,7 +64,7 @@ func main() {
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Printf("Error reading input file: %v\n", err)
+		fmt.Printf("[%v] Error reading input file\n", color.RedString("err"))
 		return
 	}
 
@@ -73,7 +73,7 @@ func main() {
 	if *outputFile != "" {
 		outFile, err := os.Create(*outputFile)
 		if err != nil {
-			fmt.Printf("Error creating output file: %v\n", err)
+			fmt.Printf("[%v] Error creating output file\n", color.RedString("err"))
 			return
 		}
 		defer outFile.Close()
@@ -83,7 +83,7 @@ func main() {
 		for _, url := range urlsFiltered {
 			_, err := writer.WriteString(url + "\n")
 			if err != nil {
-				fmt.Printf("Error writing to output file: %v\n", err)
+				fmt.Printf("[%v] Error writing to output file\n", color.RedString("err"))
 				return
 			}
 		}
@@ -94,7 +94,7 @@ func main() {
 		}
 	}
 
-	fmt.Printf("\n%v %v\n", "Number of duplicate URLs found : ", duplicateCount)
+	fmt.Printf("[%v] Number of duplicate URLs found : %v\n", color.BlueString("info"), duplicateCount)
 }
 
 func parseFlags() (*string, *string, *bool, *string) {
