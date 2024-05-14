@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/fatih/color"
@@ -31,12 +32,22 @@ func main() {
 	var domainsIncludeFilter = flag.String("md", "", "Domain to include")
 	var isUnique = flag.Bool("u", true, "Set if output unique URLs")
 	var isDebug = flag.Bool("debug", false, "Set if output debug")
+	var regexFilter = flag.String("r", "", "Regex filter for URLs")
 
 	flag.Parse()
 
 	if *inputFile == "" {
 		fmt.Println("Input file is required")
 		return
+	}
+
+	var regex *regexp.Regexp
+	var err error
+	if *regexFilter != "" {
+		regex, err = regexp.Compile(*regexFilter)
+		if err != nil {
+			fmt.Printf("\n%v %v\n", color.RedString("Number of duplicate URLs found : "), err)
+		}
 	}
 
 	file, err := os.Open(*inputFile)
@@ -54,6 +65,10 @@ func main() {
 		url := strings.TrimSpace(scanner.Text())
 
 		if *domainsIncludeFilter != "" && !strings.Contains(url, *domainsIncludeFilter) {
+			continue
+		}
+
+		if regex != nil && !regex.MatchString(url) {
 			continue
 		}
 
