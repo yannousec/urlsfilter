@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"github.com/fatih/color"
 )
 
-// djangospy -u https://target.com -version True -list-packages True -max-thread 100 -delay 100
 func main() {
 	logo := `
 ░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░░▒▓█▓▒░       ░▒▓███████▓▒░▒▓████████▓▒░▒▓█▓▒░▒▓█▓▒░   ░▒▓████████▓▒░▒▓████████▓▒░▒▓███████▓▒░  
@@ -33,6 +33,7 @@ func main() {
 	var isUnique = flag.Bool("u", true, "Set if output unique URLs")
 	var isDebug = flag.Bool("debug", false, "Set if output debug")
 	var regexFilter = flag.String("r", "", "Regex filter for URLs")
+	var isJson = flag.Bool("json", false, "Output format in json")
 
 	flag.Parse()
 
@@ -64,18 +65,22 @@ func main() {
 	for scanner.Scan() {
 		url := strings.TrimSpace(scanner.Text())
 
+		// Apply domain filter if provided
 		if *domainsIncludeFilter != "" && !strings.Contains(url, *domainsIncludeFilter) {
 			continue
 		}
 
+		// Apply regex filter if provided
 		if regex != nil && !regex.MatchString(url) {
 			continue
 		}
 
+		// Apply regex filter if provided
 		if *isUnique {
-			if _, exists := urlMap[url]; !exists {
+			if _, exists := urlMap[url]; exists {
+				duplicateCount++
+			} else {
 				urlMap[url] = true
-				duplicateCount += 1
 			}
 		} else {
 			urlMap[url] = true
@@ -87,6 +92,13 @@ func main() {
 		return
 	}
 
+	// Prepare the filtered URLs for output
+	var output []string
+	for url := range urlMap {
+		output = append(output, url)
+	}
+
+	// Write the filtered URLs to the output file or print them to the consol
 	if *outputFile != "" {
 		outFile, err := os.Create(*outputFile)
 		if err != nil {
@@ -96,17 +108,39 @@ func main() {
 		defer outFile.Close()
 
 		writer := bufio.NewWriter(outFile)
-		for url := range urlMap {
-			_, err := writer.WriteString(url + "\n")
+		if *isJson {
+			jsonData, err := json.MarshalIndent(output, "", "  ")
 			if err != nil {
-				fmt.Printf("Error writing to output file: %v\n", err)
+				fmt.Printf("Error marshaling JSON: %v\n", err)
 				return
+			}
+			_, err = writer.Write(jsonData)
+			if err != nil {
+				fmt.Printf("Error writing JSON to output file: %v\n", err)
+				return
+			}
+		} else {
+			for _, url := range output {
+				_, err := writer.WriteString(url + "\n")
+				if err != nil {
+					fmt.Printf("Error writing to output file: %v\n", err)
+					return
+				}
 			}
 		}
 		writer.Flush()
 	} else {
-		for url := range urlMap {
-			fmt.Println(url)
+		if *isJson {
+			jsonData, err := json.MarshalIndent(output, "", "  ")
+			if err != nil {
+				fmt.Printf("Error marshaling JSON: %v\n", err)
+				return
+			}
+			fmt.Println(string(jsonData))
+		} else {
+			for _, url := range output {
+				fmt.Println(url)
+			}
 		}
 	}
 
