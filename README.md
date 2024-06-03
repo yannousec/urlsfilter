@@ -15,7 +15,7 @@ TODO
 ## Example
 
 ```
-urlf -l target/my-urls.txt -o target/my-urls.txt -fd “www.domain.com“ -u True
+urlf -l target/my-urls.txt -o target/my-urls.txt -fd "www.domain.com" -u True
 ```
 
 ## Usage
@@ -26,7 +26,7 @@ l : fichier entrée
 
 o : fichier sortie
 
-fd : filtre domaine
+r : filtre domaine
 
--u : controle unicité
+u : controle unicité
 ```
