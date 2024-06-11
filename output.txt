@@ -1,0 +1,3 @@
+https://gajim.org/download/#macos
+https://gajim.org/azd
+http://gajim.org/download/#macos
